@@ -82,7 +82,6 @@ FROM game_sales
 ORDER BY games_sold DESC
 LIMIT 10;
 ```
-
 <table>
     <thead>
         <tr>
@@ -179,58 +178,18 @@ LIMIT 10;
 </table>
 
 
-
-
-```python
-%%nose
-from decimal import Decimal as D
-last_output = _
-
-def test_output_type():
-    assert str(type(last_output)) == "<class 'sql.run.ResultSet'>", \
-    "Please ensure an SQL ResultSet is the output of the code cell." 
-
-results = last_output.DataFrame()
-
-def test_results():
-    assert results.shape == (10, 6), \
-    "The results should have six columns and ten rows."
-    assert results.columns.tolist() == ["game", "platform", "publisher", "developer", "games_sold", "year"], \
-    'The results should have columns named "game", "platform", "publisher", "developer", "games_sold", and "year".'
-    assert _.DataFrame().loc[0, 'games_sold'] == D('82.90')
-    "The top selling game should be Wii Sports with 82.90 million copies sold."
-```
-
-
-
-
-
-
-    2/2 tests passed
-
-
-
-
 ## 2. Missing review scores
 <p>Wow, the best-selling video games were released between 1985 to 2017! That's quite a range; we'll have to use data from the <code>reviews</code> table to gain more insight on the best years for video games. </p>
 <p>First, it's important to explore the limitations of our database. One big shortcoming is that there is not any <code>reviews</code> data for some of the games on the <code>game_sales</code> table. </p>
 
 
-```sql
-%%sql
+```python
 SELECT COUNT (*)
 FROM game_sales AS g_s
 FULL JOIN reviews AS r
 ON g_s.game = r.game
 WHERE critic_score IS NULL AND user_score IS NULL;
 ```
-
-     * postgresql:///games
-    1 rows affected.
-
-
-
-
 
 <table>
     <thead>
@@ -245,45 +204,11 @@ WHERE critic_score IS NULL AND user_score IS NULL;
     </tbody>
 </table>
 
-
-
-
-```python
-%%nose
-last_output = _
-
-def test_output_type():
-    assert str(type(last_output)) == "<class 'sql.run.ResultSet'>", \
-    "Please ensure an SQL ResultSet is the output of the code cell." 
-
-results = last_output.DataFrame()
-
-def test_results():
-    assert results.shape == (1, 1), \
-    "The query should return just one value, a count of games where both critic_score and user_score are null."
-    assert results.columns.tolist() == ["count"], \
-    'The results should have just one column, called "count".'
-    assert last_output.DataFrame().loc[0, 'count'] == 31, \
-    "There should be 31 games where both critic_score and user_score are null."
-```
-
-
-
-
-
-
-    2/2 tests passed
-
-
-
-
 ## 3. Years that video game critics loved
 <p>It looks like a little less than ten percent of the games on the <code>game_sales</code> table don't have any reviews data. That's a small enough percentage that we can continue our exploration, but the missing reviews data is a good thing to keep in mind as we move on to evaluating results from more sophisticated queries. </p>
 <p>There are lots of ways to measure the best years for video games! Let's start with what the critics think. </p>
 
-
-```sql
-%%sql
+```python
 SELECT g_s.year AS year, 
        ROUND(AVG(r.critic_score),2) AS avg_critic_score 
 FROM game_sales AS g_s
@@ -293,13 +218,6 @@ GROUP BY year
 ORDER BY avg_critic_score DESC
 LIMIT 10;
 ```
-
-     * postgresql:///games
-    10 rows affected.
-
-
-
-
 
 <table>
     <thead>
@@ -352,49 +270,13 @@ LIMIT 10;
     </tbody>
 </table>
 
-
-
-
-```python
-%%nose
-from decimal import Decimal as D
-last_output = _
-
-def test_output_type():
-    assert str(type(last_output)) == "<class 'sql.run.ResultSet'>", \
-    "Please ensure an SQL ResultSet is the output of the code cell." 
-
-results = last_output.DataFrame()
-
-def test_results():
-    assert results.shape == (10, 2), \
-    "Make sure to limit the query to only ten results."
-    assert results.columns.tolist() == ["year", "avg_critic_score"], \
-    'The results should have two columns, called "year" and "avg_critic_score".'
-    assert last_output.DataFrame().loc[0, 'year'] == 1990, \
-    "The year with the highest score should be 1990."
-    assert last_output.DataFrame().loc[0, 'avg_critic_score'] == D('9.80'), \
-    "The highest average critic score should be 9.80."
-```
-
-
-
-
-
-
-    2/2 tests passed
-
-
-
-
 ## 4. Was 1982 really that great?
 <p>The range of great years according to critic reviews goes from 1982 until 2020: we are no closer to finding the golden age of video games! </p>
 <p>Hang on, though. Some of those <code>avg_critic_score</code> values look like suspiciously round numbers for averages. The value for 1982 looks especially fishy. Maybe there weren't a lot of video games in our dataset that were released in certain years. </p>
 <p>Let's update our query and find out whether 1982 really was such a great year for video games.</p>
 
 
-```sql
-%%sql 
+```python
 SELECT COUNT(g_s.game) AS num_games,
        g_s.year AS year, 
        ROUND(AVG(r.critic_score),2) AS avg_critic_score 
@@ -406,13 +288,6 @@ HAVING COUNT(g_s.game) > 4
 ORDER BY avg_critic_score DESC
 LIMIT 10;
 ```
-
-     * postgresql:///games
-    10 rows affected.
-
-
-
-
 
 <table>
     <thead>
@@ -476,36 +351,9 @@ LIMIT 10;
     </tbody>
 </table>
 
-
-
-
-```python
-%%nose
-from decimal import Decimal as D
-last_output = _
-
-def test_output_type():
-    assert str(type(last_output)) == "<class 'sql.run.ResultSet'>", \
-    "Please ensure an SQL ResultSet is the output of the code cell." 
-
-results = last_output.DataFrame()
-
-def test_results():
-    assert results.shape == (10, 3), \
-    "Make sure to limit the query to only ten results."
-    assert set(last_output.DataFrame().columns) == set(["year", "num_games", "avg_critic_score"]), \
-    'The results should have three columns: "year", "num_games", and "avg_critic_score".'
-    assert last_output.DataFrame().loc[0, 'year'] == 1998, \
-    "The year with the highest score should be 1998."
-    assert last_output.DataFrame().loc[0, 'num_games'] == 10, \
-    "In the year with the highest critic score, there were 10 games released."
-    assert last_output.DataFrame().loc[0, 'avg_critic_score'] == D('9.32'), \
-    "The highest average critic score should be 9.32."
-```
-
 ## 5. Years that dropped off the critics' favorites list
 <p>That looks better! The <code>num_games</code> column convinces us that our new list of the critics' top games reflects years that had quite a few well-reviewed games rather than just one or two hits. But which years dropped off the list due to having four or fewer reviewed games? Let's identify them so that someday we can track down more game reviews for those years and determine whether they might rightfully be considered as excellent years for video game releases!</p>
-<p>It's time to brush off your set theory skills. To get started, we've created tables with the results of our previous two queries:</p>
+<p>To get started, we've created tables with the results of our previous two queries:</p>
 <h3 id="top_critic_years"><code>top_critic_years</code></h3>
 <table>
 <thead>
@@ -557,8 +405,7 @@ def test_results():
 </table>
 
 
-```sql
-%%sql 
+```python
 SELECT year, 
        avg_critic_score
 FROM top_critic_years
@@ -569,36 +416,47 @@ FROM top_critic_years_more_than_four_games
 ORDER BY avg_critic_score DESC;
 ```
 
-
-```python
-%%nose
-last_output = _
-
-def test_output_type():
-    assert str(type(last_output)) == "<class 'sql.run.ResultSet'>", \
-    "Please ensure an SQL ResultSet is the output of the code cell." 
-
-results = last_output.DataFrame()
-
-def test_results():
-    assert results.shape == (6, 2), \
-    "There should be six years that dropped off the critics' favorite list after implementing the criteria that the year had to have at least five games released to be considered."
-    assert results.columns.tolist() == ["year", "avg_critic_score"], \
-    'The results should have two columns: "year" and "avg_critic_score".'
-    assert last_output.DataFrame().loc[5, 'year'] == 1982, \
-    "The last year returned by the query should be 1982."
-    assert last_output.DataFrame().loc[5, 'avg_critic_score'] == 9.00, \
-    "1982's average critic score should be 9.00."
-```
+<table>
+    <thead>
+        <tr>
+            <th>year</th>
+            <th>avg_critic_score</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>1990</td>
+            <td>9.80</td>
+        </tr>
+        <tr>
+            <td>1992</td>
+            <td>9.67</td>
+        </tr>
+        <tr>
+            <td>2020</td>
+            <td>9.20</td>
+        </tr>
+        <tr>
+            <td>1993</td>
+            <td>9.10</td>
+        </tr>
+        <tr>
+            <td>1995</td>
+            <td>9.07</td>
+        </tr>
+        <tr>
+            <td>1982</td>
+            <td>9.00</td>
+        </tr>
+        </tr>
+    </tbody>
+</table>
 
 ## 6. Years video game players loved
 <p>Based on our work in the task above, it looks like the early 1990s might merit consideration as the golden age of video games based on <code>critic_score</code> alone, but we'd need to gather more games and reviews data to do further analysis. </p>
 <p>Let's move on to looking at the opinions of another important group of people: players! To begin, let's create a query very similar to the one we used in Task Four, except this one will look at <code>user_score</code> averages by year rather than <code>critic_score</code> averages.</p>
 
-
-```sql
-%%sql 
-
+```python
 SELECT COUNT(g_s.game) AS num_games,
        g_s.year AS year, 
        ROUND(AVG(r.user_score),2) AS avg_user_score 
@@ -609,32 +467,69 @@ GROUP BY year
 HAVING COUNT(g_s.game) > 4
 ORDER BY avg_user_score DESC
 LIMIT 10;
-
 ```
 
-
-```python
-%%nose
-last_output = _
-
-def test_output_type():
-    assert str(type(last_output)) == "<class 'sql.run.ResultSet'>", \
-    "Please ensure an SQL ResultSet is the output of the code cell." 
-
-results = last_output.DataFrame()
-
-def test_results():
-    assert results.shape == (10, 3), \
-    "Don't forget to limit the query results to ten."
-    assert set(results.columns.tolist()) == set(["year", "num_games", "avg_user_score"]), \
-    'The results should have three columns: "year", "num_games", and "avg_user_score".'
-    assert last_output.DataFrame().loc[0, 'year'] == 1997, \
-    "The year with the highest user score should be 1997."
-    assert last_output.DataFrame().loc[0, 'num_games'] == 8, \
-    "In the year with the highest user score, there were eight games released."
-    assert last_output.DataFrame().loc[0, 'avg_user_score'] == 9.50, \
-    "The highest average user score should be 9.50."
-```
+<table>
+    <thead>
+        <tr>
+            <th>num_games</th>
+            <th>year</th>
+            <th>avg_user_score</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>8</td>
+            <td>1997</td>
+            <td>9.50</td>
+        </tr>
+        <tr>
+            <td>10</td>
+            <td>1998</td>
+            <td>9.40</td>
+        </tr>
+        <tr>
+            <td>23</td>
+            <td>2010</td>
+            <td>9.24</td>
+        </tr>
+        <tr>
+            <td>20</td>
+            <td>2009</td>
+            <td>9.18</td>
+        </tr>
+        <tr>
+            <td>20</td>
+            <td>2008</td>
+            <td>9.03</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td>1996</td>
+            <td>9.00</td>
+        </tr>
+        <tr>
+            <td>13</td>
+            <td>2005</td>
+            <td>8.95</td>
+        </tr>
+        <tr>
+            <td>16</td>
+            <td>2006</td>
+            <td>8.95</td>
+        </tr>
+        <tr>
+            <td>8</td>
+            <td>2000</td>
+            <td>8.80</td>
+        </tr>
+        <tr>
+            <td>11</td>
+            <td>1999</td>
+            <td>8.80</td>
+        </tr>
+    </tbody>
+</table>
 
 ## 7. Years that both players and critics loved
 <p>Alright, we've got a list of the top ten years according to both critic reviews and user reviews. Are there any years that showed up on both tables? If so, those years would certainly be excellent ones!</p>
@@ -696,8 +591,7 @@ def test_results():
 </table>
 
 
-```sql
-%%sql 
+```python
 SELECT year
 FROM top_critic_years_more_than_four_games
 INTERSECT 
@@ -705,33 +599,31 @@ SELECT year
 FROM top_user_years_more_than_four_games;
 ```
 
-
-```python
-%%nose
-last_output = _
-
-def test_output_type():
-    assert str(type(last_output)) == "<class 'sql.run.ResultSet'>", \
-    "Please ensure an SQL ResultSet is the output of the code cell." 
-
-results = last_output.DataFrame()
-
-def test_results():
-    assert results.shape == (3, 1), \
-    "There should be three years present in both tables."
-    assert results.columns.tolist() == ["year"], \
-    'The results should just have one column: "year".'
-    assert last_output.DataFrame().loc[0, 'year'] == 1998, \
-    "The first year returned by the query should be 1998."
-```
+<table>
+    <thead>
+        <tr>
+            <th>year</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>1998</td>
+        </tr>
+        <tr>
+            <td>2008</td>
+        </tr>
+        <tr>
+            <td>2002</td>
+        </tr>
+        <tr>
+    </tbody>
+</table>
 
 ## 8. Sales in the best video game years
 <p>Looks like we've got three years that both users and critics agreed were in the top ten! There are many other ways of measuring what the best years for video games are, but let's stick with these years for now. We know that critics and players liked these years, but what about video game makers? Were sales good? Let's find out.</p>
 <p>This time, we haven't saved the results from the previous task in a table for you. Instead, we'll use the query from the previous task as a subquery in this one! This is a great skill to have, as we don't always have write permissions on the database we are querying.</p>
 
-
-```sql
-%%sql 
+```python
 SELECT year,
        SUM(games_sold) AS total_games_sold
 FROM game_sales
@@ -744,26 +636,29 @@ GROUP BY year
 ORDER BY total_games_sold DESC;
 ```
 
+<table>
+    <thead>
+        <tr>
+            <th>year</th>
+            <th>total_games_sold</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>2008</td>
+            <th>105.07</th>
+        </tr>
+        <tr>
+            <td>1998</td>
+            <th>101.52</th>
+        </tr>
+        <tr>
+            <td>2002</td>
+            <th>58.67</th>
+        </tr>
+        <tr>
+    </tbody>
+</table>
 
-```python
-%%nose
-from decimal import Decimal as D
-last_output = _
 
 
-def test_output_type():
-    assert str(type(last_output)) == "<class 'sql.run.ResultSet'>", \
-    "Please ensure an SQL ResultSet is the output of the code cell." 
-
-results = last_output.DataFrame()
-
-def test_results():
-    assert results.shape == (3, 2), \
-    "There should be games sales data for three years: the same three years from the previous query."
-    assert results.columns.tolist() == ["year", "total_games_sold"], \
-    'The results should have two columns: "year" and "total_games_sold".'
-    assert last_output.DataFrame().loc[0, 'year'] == 2008, \
-    "Just like in the last query, the first year returned should be 2008."
-    assert last_output.DataFrame().loc[0, 'total_games_sold'] == D('175.07'), \
-    "In 2008, the total_games_sold value should be 175.07."
-```
